@@ -1,118 +1,183 @@
 <script lang="ts">
-  import { Plus, Search, MoreVertical, Trash2, Edit2, Shield, Mail } from 'lucide-svelte';
+  import { enhance } from "$app/forms";
+  import { Plus, Search } from "lucide-svelte";
+  import Table from "$lib/components/Table.svelte";
 
-  const users = [
-    { id: 1, name: 'Alex Morgan', email: 'alex@example.com', role: 'Admin', status: 'Active', avatar: 'AM' },
-    { id: 2, name: 'Sarah Lee', email: 'sarah@example.com', role: 'User', status: 'Active', avatar: 'SL' },
-    { id: 3, name: 'Mike Chen', email: 'mike@example.com', role: 'Editor', status: 'Inactive', avatar: 'MC' },
-    { id: 4, name: 'Jessica Wu', email: 'jessica@example.com', role: 'User', status: 'Active', avatar: 'JW' },
-    { id: 5, name: 'David Kim', email: 'david@example.com', role: 'User', status: 'Pending', avatar: 'DK' },
+  export let data;
+
+  let tableComponent: Table;
+  let deleteForm: HTMLFormElement;
+  let deleteId = "";
+  let searchTerm = "";
+
+  // Reactively filter table when searchTerm changes
+  $: if (tableComponent && searchTerm !== undefined) {
+    tableComponent.setFilter([
+      [
+        { field: "firstName", type: "like", value: searchTerm },
+        { field: "lastName", type: "like", value: searchTerm },
+        { field: "email", type: "like", value: searchTerm },
+        { field: "role", type: "like", value: searchTerm },
+      ],
+    ]);
+  }
+
+  // Formatters
+  const userFormatter = (cell: any) => {
+    const data = cell.getData();
+    return `
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-700 font-bold text-xs ring-2 ring-white">
+          ${data.firstName[0]}${data.lastName[0]}
+        </div>
+        <div>
+          <div class="font-medium text-slate-900 leading-tight">${data.firstName} ${data.lastName}</div>
+          <div class="text-xs text-slate-500 mt-0.5 flex items-center gap-1">
+             ${data.email}
+          </div>
+        </div>
+      </div>
+    `;
+  };
+
+  const roleFormatter = (cell: any) => {
+    const role = cell.getValue();
+    const styles: Record<string, string> = {
+      Admin: "bg-purple-100 text-purple-700",
+      User: "bg-blue-100 text-blue-700",
+      Agent: "bg-emerald-100 text-emerald-700",
+    };
+    const css = styles[role] || "bg-slate-100 text-slate-700";
+
+    const shieldIcon = `<svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-1"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>`;
+    const userIcon = `<svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-1"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>`;
+
+    const icon = role === "Admin" ? shieldIcon : userIcon;
+
+    return `<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${css}">${icon}${role}</span>`;
+  };
+
+  const statusFormatter = (cell: any) => {
+    const status = cell.getValue();
+    let css = "";
+    if (status === "Active") css = "bg-emerald-100 text-emerald-700";
+    else if (status === "Inactive") css = "bg-slate-100 text-slate-600";
+    else css = "bg-amber-100 text-amber-700";
+
+    return `<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${css}">
+        ${status}
+    </span>`;
+  };
+
+  const actionFormatter = (cell: any) => {
+    return `
+        <div class="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+            <button class="edit-btn p-2 text-slate-400 hover:text-indigo-600 hover:bg-slate-100 rounded-lg transition-colors" title="Edit User">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"></path></svg>
+            </button>
+            <button class="delete-btn p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors" title="Delete User">
+                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"></path><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path></svg>
+            </button>
+        </div>
+      `;
+  };
+
+  // Define Columns
+  const columns = [
+    {
+      title: "USER",
+      field: "firstName",
+      formatter: userFormatter,
+      minWidth: 260,
+    },
+    { title: "ROLE", field: "role", formatter: roleFormatter, width: 140 },
+    {
+      title: "STATUS",
+      field: "status",
+      formatter: statusFormatter,
+      width: 140,
+    },
+    {
+      title: "ACTIONS",
+      formatter: actionFormatter,
+      headerSort: false,
+      hozAlign: "right",
+      width: 120,
+      cellClick: (e: any, cell: any) => {
+        const target = e.target as HTMLElement;
+        const id = cell.getData().id;
+
+        if (target.closest(".edit-btn")) {
+          window.location.href = `/users/${id}/edit`;
+        }
+
+        if (target.closest(".delete-btn")) {
+          if (confirm("Are you sure you want to delete this user?")) {
+            triggerDelete(id);
+          }
+        }
+      },
+    },
   ];
+
+  function triggerDelete(id: string) {
+    deleteId = id;
+    setTimeout(() => {
+      deleteForm.requestSubmit();
+    }, 0);
+  }
 </script>
 
-<div class="flex flex-col gap-6">
+<div class="flex flex-col gap-6 max-w-7xl mx-auto">
   <div class="flex items-center justify-between">
     <div>
       <h1 class="text-2xl font-bold text-slate-800">User Management</h1>
-      <p class="text-slate-500 mt-1">Manage system access and user roles</p>
+      <p class="text-slate-500 mt-1">Manage user access and details</p>
     </div>
-    <a href="/users/add" class="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2.5 rounded-xl font-medium flex items-center gap-2 transition-colors shadow-sm shadow-indigo-200">
+    <a
+      href="/users/add"
+      class="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2.5 rounded-xl font-medium flex items-center gap-2 transition-colors shadow-sm shadow-indigo-200"
+    >
       <Plus size={18} />
       Add User
     </a>
   </div>
 
-  <div class="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
-    <!-- Toolbar -->
-    <div class="p-5 border-b border-slate-100 flex items-center justify-between gap-4">
-      <div class="relative w-64">
-        <Search class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
-        <input 
-          type="text" 
-          placeholder="Search users..." 
+  <div
+    class="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden flex flex-col"
+  >
+    <!-- Toolbar with Search -->
+    <div class="p-5 border-b border-slate-100 flex items-center gap-4">
+      <div class="relative flex-1 max-w-md">
+        <Search
+          class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
+          size={18}
+        />
+        <input
+          type="text"
+          bind:value={searchTerm}
+          placeholder="Search users..."
           class="w-full pl-9 pr-4 py-2 rounded-lg bg-slate-50 border border-slate-200 focus:bg-white focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 outline-none text-sm transition-all"
         />
       </div>
-      <div class="flex items-center gap-3">
-        <select class="text-sm border-slate-200 rounded-lg p-2 text-slate-600 focus:ring-indigo-500 focus:border-indigo-500 outline-none bg-slate-50">
-          <option>All Roles</option>
-          <option>Admin</option>
-          <option>User</option>
-          <option>Editor</option>
-        </select>
-        <select class="text-sm border-slate-200 rounded-lg p-2 text-slate-600 focus:ring-indigo-500 focus:border-indigo-500 outline-none bg-slate-50">
-          <option>All Status</option>
-          <option>Active</option>
-          <option>Inactive</option>
-          <option>Pending</option>
-        </select>
-      </div>
     </div>
 
-    <!-- Table -->
-    <div class="overflow-x-auto">
-      <table class="w-full text-left">
-        <thead class="bg-slate-50 text-slate-500 text-xs uppercase font-semibold tracking-wider border-b border-slate-100">
-          <tr>
-            <th class="px-6 py-4">User</th>
-            <th class="px-6 py-4">Role</th>
-            <th class="px-6 py-4">Status</th>
-            <th class="px-6 py-4 text-right">Actions</th>
-          </tr>
-        </thead>
-        <tbody class="divide-y divide-slate-100">
-          {#each users as user}
-            <tr class="hover:bg-slate-50/50 transition-colors group">
-              <td class="px-6 py-4">
-                <div class="flex items-center gap-3">
-                  <div class="w-10 h-10 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center font-bold text-sm">
-                    {user.avatar}
-                  </div>
-                  <div>
-                    <p class="font-medium text-slate-900">{user.name}</p>
-                    <div class="flex items-center gap-1.5 text-xs text-slate-500 mt-0.5">
-                      <Mail size={12} />
-                      {user.email}
-                    </div>
-                  </div>
-                </div>
-              </td>
-              <td class="px-6 py-4">
-                <div class="flex items-center gap-2">
-                  <Shield size={14} class="text-slate-400" />
-                  <span class="text-sm text-slate-600 font-medium">{user.role}</span>
-                </div>
-              </td>
-              <td class="px-6 py-4">
-                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
-                  {user.status === 'Active' ? 'bg-emerald-100 text-emerald-700' : 
-                   user.status === 'Inactive' ? 'bg-slate-100 text-slate-600' : 'bg-amber-100 text-amber-700'}">
-                  {user.status}
-                </span>
-              </td>
-              <td class="px-6 py-4 text-right">
-                <div class="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                  <button class="p-2 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors" title="Edit">
-                    <Edit2 size={16} />
-                  </button>
-                  <button class="p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors" title="Delete">
-                    <Trash2 size={16} />
-                  </button>
-                </div>
-              </td>
-            </tr>
-          {/each}
-        </tbody>
-      </table>
-    </div>
-    
-    <!-- Pagination -->
-    <div class="p-4 border-t border-slate-100 flex items-center justify-between text-sm text-slate-500">
-      <span>Showing 1 to 5 of 24 entries</span>
-      <div class="flex gap-2">
-        <button class="px-3 py-1 rounded border border-slate-200 hover:bg-slate-50 disabled:opacity-50">Previous</button>
-        <button class="px-3 py-1 rounded border border-slate-200 hover:bg-slate-50">Next</button>
-      </div>
-    </div>
+    <!-- Table Component -->
+    <Table
+      bind:this={tableComponent}
+      data={data.users}
+      {columns}
+      placeholder="No users found."
+    />
   </div>
 </div>
+
+<form
+  method="POST"
+  action="?/delete"
+  use:enhance
+  bind:this={deleteForm}
+  class="hidden"
+>
+  <input type="hidden" name="id" bind:value={deleteId} />
+</form>
