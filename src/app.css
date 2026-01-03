@@ -1,0 +1,17 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --primary: 250 100% 65%; /* Vivid Purple */
+  --secondary: 180 100% 40%; /* Teal */
+  --background: 220 20% 97%; /* Light Gray-Blue */
+  --surface: 0 0% 100%; /* White */
+  --text: 220 20% 20%; /* Dark Blue-Gray */
+}
+
+body {
+  background-color: hsl(var(--background));
+  color: hsl(var(--text));
+  font-family: 'Inter', sans-serif;
+}
