@@ -8,6 +8,11 @@ export interface User {
     email: string;
     role: Role;
     status: Status;
+    documents?: {
+        aadhar?: string | null;
+        pan?: string | null;
+        voterId?: string | null;
+    };
     createdAt: Date;
 }
 
@@ -16,6 +21,7 @@ export interface Agent {
     name: string;
     email: string;
     status: Status;
+
     totalSales: number;
     commissionRate: number; // percentage
     createdAt: Date;

@@ -53,7 +53,7 @@
       <Wallet size={20} />
     </div>
     <span class="font-bold text-xl text-slate-800 tracking-tight"
-      >WalletAdmin</span
+      >Wallet App</span
     >
   </div>
 

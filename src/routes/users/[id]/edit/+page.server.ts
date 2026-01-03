@@ -27,6 +27,11 @@ export const actions = {
             status: data.get('status') as any
         };
 
+        // Extract files
+        const aadhar = data.get('aadhar') as File;
+        const pan = data.get('pan') as File;
+        const voterId = data.get('voterId') as File;
+
         try {
             await schema.validate(values, { abortEarly: false });
         } catch (err: any) {
@@ -39,7 +44,23 @@ export const actions = {
             }
         }
 
-        const updated = DB.updateUser(params.id, values);
+        // Get existing user to preserve docs if not updated
+        const existingUser = DB.getUser(params.id);
+        const existingDocs = existingUser?.documents || {};
+
+        // Mock saving files (or keeping existing if not replaced and size > 0)
+        // Note: form data file input sending empty file if no selection.
+        const documents = {
+            aadhar: aadhar?.size > 0 ? `uploads/${aadhar.name}` : existingDocs.aadhar,
+            pan: pan?.size > 0 ? `uploads/${pan.name}` : existingDocs.pan,
+            voterId: voterId?.size > 0 ? `uploads/${voterId.name}` : existingDocs.voterId
+        };
+
+        const updated = DB.updateUser(params.id, {
+            ...values,
+            documents
+        });
+
         if (!updated) return fail(404, { message: 'User not found' });
 
         throw redirect(303, '/users');

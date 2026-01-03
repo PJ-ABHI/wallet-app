@@ -6,6 +6,7 @@
         ArrowUpRight,
         ArrowDownLeft,
         Calendar,
+        X,
     } from "lucide-svelte";
     import Table from "$lib/components/Table.svelte";
 
@@ -17,18 +18,45 @@
 
     let tableComponent: Table;
     let searchTerm = "";
-    // Note: For now we'll stick to text search for simplicity with Tabulator,
-    // or use filters if we want to expand. Tabulator has powerful filter APIs.
+    let selectedDate = "";
 
-    $: if (tableComponent && searchTerm !== undefined) {
-        tableComponent.setFilter([
-            [
+    // Reactive Filtering: Combines Text Search + Date Filter
+    $: if (tableComponent) {
+        const filters: any[] = [];
+
+        // 1. Text Search (OR logic across fields)
+        if (searchTerm) {
+            filters.push([
                 { field: "description", type: "like", value: searchTerm },
                 { field: "userEmail", type: "like", value: searchTerm },
                 { field: "status", type: "like", value: searchTerm },
                 { field: "type", type: "like", value: searchTerm },
-            ],
-        ]);
+            ]);
+        }
+
+        // 2. Date Filter (AND logic)
+        if (selectedDate) {
+            // Custom filter to compare date part only (ignoring time)
+            filters.push({
+                field: "date",
+                type: function (
+                    headerValue: any,
+                    rowValue: any,
+                    rowData: any,
+                    filterParams: any,
+                ) {
+                    // rowValue is from the data (e.g. ISO string or timestamp)
+                    // headerValue is the selectedDate (YYYY-MM-DD from input)
+                    const rowDate = new Date(rowValue)
+                        .toISOString()
+                        .split("T")[0];
+                    return rowDate === headerValue;
+                },
+                value: selectedDate,
+            });
+        }
+
+        tableComponent.setFilter(filters);
     }
 
     // Formatters
@@ -38,14 +66,10 @@
         const bgColor = isCredit ? "bg-emerald-100" : "bg-rose-100";
         const textColor = isCredit ? "text-emerald-600" : "text-rose-600";
 
-        const arrowDown = `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 20h10"/><path d="M20 7l-5 5-5-5"/></svg>`; // Simplification
-        const arrowUp = `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17l9.2-9.2M17 17V7H7"/></svg>`;
-        const arrowDownLeft = `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 7L7.8 16.2M17 17v-9.2h-9.2"/></svg>`; // Actually this is up-right but context matters
-
-        // Using the exact icons from lucide is harder in string formatter, so using SVG strings
+        // Using SVG strings for simplicity
         const icon = isCredit
-            ? `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 7 7 17"/><path d="M17 17H7V7"/></svg>` // arrow-down-left equivalent ish
-            : `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17 17 7"/><path d="M7 7h10v10"/></svg>`; // arrow-up-right
+            ? `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 7 7 17"/><path d="M17 17H7V7"/></svg>`
+            : `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17 17 7"/><path d="M7 7h10v10"/></svg>`;
 
         return `
          <div class="flex items-center gap-3">
@@ -81,7 +105,7 @@
     const dateFormatter = (cell: any) => {
         const date = new Date(cell.getValue()).toLocaleDateString();
         return `
-        <div class="flex items-center gap-1.5 text-slate-500">
+        <div class="flex items-center gap-1.5 text-slate-500 font-medium">
             <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>
             ${date}
         </div>
@@ -113,9 +137,6 @@
 
     // Export to CSV
     function exportCSV() {
-        // Re-implement or rely on Tabulator?
-        // Tabulator has built-in download: table.download("csv", "data.csv");
-        // But preserving existing logic for now is safer/customizable.
         const headers = [
             "ID",
             "User",
@@ -125,9 +146,31 @@
             "Status",
             "Description",
         ];
-        // ... existing export logic ...
-        // Actually, let's just use the data prop directly as we have it.
-        const rows = transactions.map((t: any) => [
+
+        // Use filtered data if accessible, otherwise use source data
+        // For accurate export respecting filters, simplest here is source data unless we read back from table.
+        // Given current simple filters, filtering the source array here mirrors the table logic.
+
+        let rowsData = transactions;
+
+        // Simple manual filter mirror for CSV export (Optional, but better UX)
+        if (searchTerm || selectedDate) {
+            rowsData = transactions.filter((t: any) => {
+                const rowDate = new Date(t.date).toISOString().split("T")[0];
+                const dateMatch = !selectedDate || rowDate === selectedDate;
+                const searchLower = searchTerm.toLowerCase();
+                // Matches existing table logic mostly
+                const searchMatch =
+                    !searchTerm ||
+                    t.description.toLowerCase().includes(searchLower) ||
+                    t.userEmail.toLowerCase().includes(searchLower) ||
+                    t.status.toLowerCase().includes(searchLower) ||
+                    t.type.toLowerCase().includes(searchLower);
+                return dateMatch && searchMatch;
+            });
+        }
+
+        const rows = rowsData.map((t: any) => [
             t.id,
             t.userEmail,
             t.type,
@@ -176,7 +219,8 @@
         <div
             class="p-5 border-b border-slate-100 flex flex-wrap items-center justify-between gap-4"
         >
-            <div class="flex items-center gap-4 flex-1">
+            <!-- Search -->
+            <div class="flex items-center gap-4 flex-1 min-w-[300px]">
                 <div class="relative flex-1 max-w-md">
                     <Search
                         class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
@@ -185,17 +229,36 @@
                     <input
                         type="text"
                         bind:value={searchTerm}
-                        placeholder="Search details..."
-                        class="w-full pl-9 pr-4 py-2 rounded-lg bg-slate-50 border border-slate-200 focus:bg-white focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 outline-none text-sm transition-all"
+                        placeholder="Search transactions..."
+                        class="w-full pl-10 pr-4 py-2.5 rounded-xl bg-slate-50 border border-slate-200 focus:bg-white focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 outline-none text-sm transition-all shadow-sm"
                     />
                 </div>
             </div>
 
-            <!-- 
-             Note: Advanced dropdown filters (User/Status) removed for brevity 
-             as the user requested "Common Tabulator File" and search is the primary filter.
-             If needed strictly, we can add them back and route to .setFilter 
-           -->
+            <!-- Date Filter -->
+            <div class="relative">
+                <div class="relative">
+                    <input
+                        type="date"
+                        bind:value={selectedDate}
+                        class="pl-10 pr-8 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-sm text-slate-700 focus:bg-white focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 outline-none shadow-sm cursor-pointer transition-all"
+                    />
+                    <Calendar
+                        class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none"
+                        size={18}
+                    />
+                </div>
+
+                {#if selectedDate}
+                    <button
+                        on:click={() => (selectedDate = "")}
+                        class="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-slate-400 hover:text-slate-600 rounded-full hover:bg-slate-200 transition-colors"
+                        title="Clear date"
+                    >
+                        <X size={14} />
+                    </button>
+                {/if}
+            </div>
         </div>
 
         <!-- Table Component -->

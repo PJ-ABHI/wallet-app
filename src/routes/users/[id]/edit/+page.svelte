@@ -1,6 +1,7 @@
 <script lang="ts">
     import { ArrowLeft, Save, AlertCircle } from "lucide-svelte";
     import { enhance } from "$app/forms";
+    import FileUpload from "$lib/components/FileUpload.svelte";
 
     export let data;
     export let form;
@@ -28,132 +29,172 @@
     <div
         class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden"
     >
-        <form method="POST" use:enhance class="p-8 space-y-6">
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <!-- First Name -->
-                <div class="space-y-2">
-                    <label
-                        for="firstName"
-                        class="block text-sm font-semibold text-slate-700"
-                        >First Name</label
-                    >
-                    <input
-                        type="text"
-                        name="firstName"
-                        id="firstName"
-                        value={values.firstName}
-                        class="w-full px-4 py-2.5 rounded-xl border {form
-                            ?.errors?.firstName
-                            ? 'border-rose-300 focus:border-rose-500 focus:ring-rose-100'
-                            : 'border-slate-200 focus:border-indigo-500 focus:ring-indigo-100'} bg-slate-50 focus:bg-white outline-none focus:ring-4 transition-all"
-                        placeholder="John"
-                    />
-                    {#if form?.errors?.firstName}
-                        <p
-                            class="text-xs text-rose-500 flex items-center gap-1 mt-1"
-                        >
-                            <AlertCircle size={12} />
-                            {form.errors.firstName}
-                        </p>
-                    {/if}
-                </div>
-
-                <!-- Last Name -->
-                <div class="space-y-2">
-                    <label
-                        for="lastName"
-                        class="block text-sm font-semibold text-slate-700"
-                        >Last Name</label
-                    >
-                    <input
-                        type="text"
-                        name="lastName"
-                        id="lastName"
-                        value={values.lastName}
-                        class="w-full px-4 py-2.5 rounded-xl border {form
-                            ?.errors?.lastName
-                            ? 'border-rose-300 focus:border-rose-500 focus:ring-rose-100'
-                            : 'border-slate-200 focus:border-indigo-500 focus:ring-indigo-100'} bg-slate-50 focus:bg-white outline-none focus:ring-4 transition-all"
-                        placeholder="Doe"
-                    />
-                    {#if form?.errors?.lastName}
-                        <p
-                            class="text-xs text-rose-500 flex items-center gap-1 mt-1"
-                        >
-                            <AlertCircle size={12} />
-                            {form.errors.lastName}
-                        </p>
-                    {/if}
-                </div>
-            </div>
-
-            <!-- Email -->
-            <div class="space-y-2">
-                <label
-                    for="email"
-                    class="block text-sm font-semibold text-slate-700"
-                    >Email Address</label
+        <form
+            method="POST"
+            enctype="multipart/form-data"
+            use:enhance
+            class="p-8 space-y-8"
+        >
+            <!-- Personal Info Section -->
+            <div class="space-y-6">
+                <h3
+                    class="font-semibold text-slate-900 flex items-center gap-2 pb-2 border-b border-slate-100"
                 >
-                <div class="relative">
-                    <input
-                        type="email"
-                        name="email"
-                        id="email"
-                        value={values.email}
-                        class="w-full px-4 py-2.5 rounded-xl border {form
-                            ?.errors?.email
-                            ? 'border-rose-300 focus:border-rose-500 focus:ring-rose-100'
-                            : 'border-slate-200 focus:border-indigo-500 focus:ring-indigo-100'} bg-slate-50 focus:bg-white outline-none focus:ring-4 transition-all"
-                        placeholder="john@example.com"
-                    />
+                    Personal Information
+                </h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- First Name -->
+                    <div class="space-y-2">
+                        <label
+                            for="firstName"
+                            class="block text-sm font-semibold text-slate-700"
+                            >First Name</label
+                        >
+                        <input
+                            type="text"
+                            name="firstName"
+                            id="firstName"
+                            value={values.firstName}
+                            class="w-full px-4 py-2.5 rounded-xl border {form
+                                ?.errors?.firstName
+                                ? 'border-rose-300 focus:border-rose-500 focus:ring-rose-100'
+                                : 'border-slate-200 focus:border-indigo-500 focus:ring-indigo-100'} bg-slate-50 focus:bg-white outline-none focus:ring-4 transition-all"
+                            placeholder="John"
+                        />
+                        {#if form?.errors?.firstName}
+                            <p
+                                class="text-xs text-rose-500 flex items-center gap-1 mt-1"
+                            >
+                                <AlertCircle size={12} />
+                                {form.errors.firstName}
+                            </p>
+                        {/if}
+                    </div>
+
+                    <!-- Last Name -->
+                    <div class="space-y-2">
+                        <label
+                            for="lastName"
+                            class="block text-sm font-semibold text-slate-700"
+                            >Last Name</label
+                        >
+                        <input
+                            type="text"
+                            name="lastName"
+                            id="lastName"
+                            value={values.lastName}
+                            class="w-full px-4 py-2.5 rounded-xl border {form
+                                ?.errors?.lastName
+                                ? 'border-rose-300 focus:border-rose-500 focus:ring-rose-100'
+                                : 'border-slate-200 focus:border-indigo-500 focus:ring-indigo-100'} bg-slate-50 focus:bg-white outline-none focus:ring-4 transition-all"
+                            placeholder="Doe"
+                        />
+                        {#if form?.errors?.lastName}
+                            <p
+                                class="text-xs text-rose-500 flex items-center gap-1 mt-1"
+                            >
+                                <AlertCircle size={12} />
+                                {form.errors.lastName}
+                            </p>
+                        {/if}
+                    </div>
                 </div>
-                {#if form?.errors?.email}
-                    <p
-                        class="text-xs text-rose-500 flex items-center gap-1 mt-1"
+
+                <!-- Email -->
+                <div class="space-y-2">
+                    <label
+                        for="email"
+                        class="block text-sm font-semibold text-slate-700"
+                        >Email Address</label
                     >
-                        <AlertCircle size={12} />
-                        {form.errors.email}
-                    </p>
-                {/if}
+                    <div class="relative">
+                        <input
+                            type="email"
+                            name="email"
+                            id="email"
+                            value={values.email}
+                            class="w-full px-4 py-2.5 rounded-xl border {form
+                                ?.errors?.email
+                                ? 'border-rose-300 focus:border-rose-500 focus:ring-rose-100'
+                                : 'border-slate-200 focus:border-indigo-500 focus:ring-indigo-100'} bg-slate-50 focus:bg-white outline-none focus:ring-4 transition-all"
+                            placeholder="john@example.com"
+                        />
+                    </div>
+                    {#if form?.errors?.email}
+                        <p
+                            class="text-xs text-rose-500 flex items-center gap-1 mt-1"
+                        >
+                            <AlertCircle size={12} />
+                            {form.errors.email}
+                        </p>
+                    {/if}
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- Role -->
+                    <div class="space-y-2">
+                        <label
+                            for="role"
+                            class="block text-sm font-semibold text-slate-700"
+                            >Role</label
+                        >
+                        <select
+                            name="role"
+                            id="role"
+                            value={values.role}
+                            class="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:border-indigo-500 focus:ring-indigo-100 bg-slate-50 focus:bg-white outline-none focus:ring-4 transition-all appearance-none"
+                        >
+                            <option value="User">User</option>
+                            <option value="Agent">Agent</option>
+                            <option value="Admin">Admin</option>
+                        </select>
+                    </div>
+
+                    <!-- Status -->
+                    <div class="space-y-2">
+                        <label
+                            for="status"
+                            class="block text-sm font-semibold text-slate-700"
+                            >Status</label
+                        >
+                        <select
+                            name="status"
+                            id="status"
+                            value={values.status}
+                            class="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:border-indigo-500 focus:ring-indigo-100 bg-slate-50 focus:bg-white outline-none focus:ring-4 transition-all appearance-none"
+                        >
+                            <option value="Active">Active</option>
+                            <option value="Inactive">Inactive</option>
+                            <option value="Pending">Pending</option>
+                        </select>
+                    </div>
+                </div>
             </div>
 
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <!-- Role -->
-                <div class="space-y-2">
-                    <label
-                        for="role"
-                        class="block text-sm font-semibold text-slate-700"
-                        >Role</label
-                    >
-                    <select
-                        name="role"
-                        id="role"
-                        value={values.role}
-                        class="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:border-indigo-500 focus:ring-indigo-100 bg-slate-50 focus:bg-white outline-none focus:ring-4 transition-all appearance-none"
-                    >
-                        <option value="User">User</option>
-                        <option value="Agent">Agent</option>
-                        <option value="Admin">Admin</option>
-                    </select>
-                </div>
+            <!-- Verified Documents Section -->
+            <div class="space-y-6">
+                <h3
+                    class="font-semibold text-slate-900 flex items-center gap-2 pb-2 border-b border-slate-100"
+                >
+                    Identity Verification Documents
+                </h3>
 
-                <!-- Status -->
-                <div class="space-y-2">
-                    <label
-                        for="status"
-                        class="block text-sm font-semibold text-slate-700"
-                        >Status</label
-                    >
-                    <select
-                        name="status"
-                        id="status"
-                        value={values.status}
-                        class="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:border-indigo-500 focus:ring-indigo-100 bg-slate-50 focus:bg-white outline-none focus:ring-4 transition-all appearance-none"
-                    >
-                        <option value="Active">Active</option>
-                        <option value="Inactive">Inactive</option>
-                        <option value="Pending">Pending</option>
-                    </select>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <FileUpload
+                        name="aadhar"
+                        label="Aadhar Card"
+                        existingFile={data.user?.documents?.aadhar}
+                    />
+                    <FileUpload
+                        name="pan"
+                        label="PAN Card"
+                        existingFile={data.user?.documents?.pan}
+                    />
+                    <FileUpload
+                        name="voterId"
+                        label="Voter ID"
+                        existingFile={data.user?.documents?.voterId}
+                    />
                 </div>
             </div>
 

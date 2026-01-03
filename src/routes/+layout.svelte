@@ -4,7 +4,7 @@
   import Sidebar from "$lib/components/Sidebar.svelte";
   import Header from "$lib/components/Header.svelte";
 
-  let { children } = $props();
+  let { children, data } = $props();
 </script>
 
 <div
@@ -16,7 +16,7 @@
     <Sidebar />
 
     <div class="pl-64 flex flex-col min-h-screen transition-all duration-300">
-      <Header />
+      <Header user={data.user} />
       <main class="flex-1 p-8 overflow-x-hidden">
         <div
           class="max-w-7xl mx-auto space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500"
