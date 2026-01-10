@@ -1,6 +1,6 @@
 # My Wallet App
 
-[![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/PJ-ABHI/wallet-app)
+[![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/PJ-ABHI/wallet-app) [![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/PJ-ABHI/wallet-app)
 
 This is a SvelteKit wallet application.
 
