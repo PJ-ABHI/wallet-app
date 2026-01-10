@@ -1,6 +1,9 @@
 <script lang="ts">
   import { page } from "$app/stores";
 
+  export let isOpen = false;
+  export let closeSidebar: () => void = () => {};
+
   import {
     LayoutDashboard,
     Users,
@@ -11,6 +14,7 @@
     ChevronDown,
     ChevronRight,
     Percent,
+    X,
   } from "lucide-svelte";
 
   const menuItems = [
@@ -44,17 +48,28 @@
 </script>
 
 <aside
-  class="w-64 bg-white border-r border-slate-200 flex flex-col h-screen fixed left-0 top-0 shadow-sm z-10 transition-all duration-300"
+  class="w-64 bg-white border-r border-slate-200 flex flex-col h-screen fixed left-0 top-0 shadow-xl z-50 transition-transform duration-300 md:translate-x-0 {isOpen
+    ? 'translate-x-0'
+    : '-translate-x-full'}"
 >
-  <div class="p-6 border-b border-slate-100 flex items-center gap-3">
-    <div
-      class="w-8 h-8 rounded-lg bg-indigo-600 flex items-center justify-center text-white"
-    >
-      <Wallet size={20} />
+  <div class="p-6 border-b border-slate-100 flex items-center justify-between">
+    <div class="flex items-center gap-3">
+      <div
+        class="w-8 h-8 rounded-lg bg-indigo-600 flex items-center justify-center text-white"
+      >
+        <Wallet size={20} />
+      </div>
+      <span class="font-bold text-xl text-slate-800 tracking-tight"
+        >Wallet App</span
+      >
     </div>
-    <span class="font-bold text-xl text-slate-800 tracking-tight"
-      >Wallet App</span
+    <!-- Mobile Close Button -->
+    <button
+      on:click={closeSidebar}
+      class="md:hidden text-slate-400 hover:text-slate-600"
     >
+      <X size={24} />
+    </button>
   </div>
 
   <nav class="flex-1 overflow-y-auto py-6 px-4 space-y-1">

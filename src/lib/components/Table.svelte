@@ -43,8 +43,11 @@
     }
 </script>
 
-<div class="relative w-full">
-    <div bind:this={tableElement} class="tabulator-custom w-full"></div>
+<div class="relative w-full overflow-x-auto">
+    <div
+        bind:this={tableElement}
+        class="tabulator-custom w-full min-w-[800px]"
+    ></div>
 </div>
 
 <style>

@@ -10,11 +10,13 @@
     LogOut,
     Settings,
     ChevronDown,
+    Menu,
   } from "lucide-svelte";
   import { fade, slide } from "svelte/transition";
   import { userAvatar } from "$lib/stores/user";
 
   export let user: { email: string; role: string } | null = null;
+  export let toggleSidebar: () => void = () => {};
 
   let showNotifications = false;
   let showProfileMenu = false;
@@ -82,6 +84,12 @@
   class="h-20 bg-white/80 backdrop-blur-md border-b border-slate-200/60 sticky top-0 z-20 px-8 flex items-center justify-between shadow-sm relative"
 >
   <div class="flex items-center gap-4 flex-1">
+    <button
+      on:click={toggleSidebar}
+      class="md:hidden p-2 -ml-2 text-slate-500 hover:bg-slate-100 rounded-lg transition-colors"
+    >
+      <Menu size={24} />
+    </button>
     <div class="relative w-96 hidden md:block group">
       <Search
         class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-indigo-500 transition-colors"
