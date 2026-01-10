@@ -1,4 +1,8 @@
-# sv
+# My Wallet App
+
+[![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/PJ-ABHI/wallet-app)
+
+This is a SvelteKit wallet application.
 
 Everything you need to build a Svelte project, powered by [`sv`](https://github.com/sveltejs/cli).
 
