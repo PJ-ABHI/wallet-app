@@ -1,7 +1,12 @@
 <script lang="ts">
     import { enhance } from "$app/forms";
 
+    export let data;
     export let form;
+
+    // Use form value if error occurred (user input), otherwise use load data default
+    $: email = form?.email ?? data?.email ?? "";
+    $: password = form?.password ?? data?.password ?? "";
 </script>
 
 <div class="min-h-screen bg-gray-950 flex items-center justify-center p-4">
@@ -36,7 +41,7 @@
                     type="email"
                     name="email"
                     id="email"
-                    value={form?.email ?? "alex@example.com"}
+                    value={email}
                     class="w-full px-4 py-3 bg-gray-950 border border-gray-800 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-gray-100 placeholder-gray-500 transition-all outline-none"
                     placeholder="demo@wallet.com"
                 />
@@ -55,7 +60,7 @@
                     type="password"
                     name="password"
                     id="password"
-                    value="password"
+                    value={password}
                     class="w-full px-4 py-3 bg-gray-950 border border-gray-800 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-gray-100 placeholder-gray-500 transition-all outline-none"
                     placeholder="password"
                 />

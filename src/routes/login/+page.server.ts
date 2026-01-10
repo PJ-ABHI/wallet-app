@@ -12,6 +12,13 @@ const USERS = {
     'agent@wallet.com': { role: 'Agent', password: 'password' }
 } as const;
 
+export const load = async () => {
+    return {
+        email: 'admin@wallet.com',
+        password: 'password'
+    };
+};
+
 export const actions = {
     default: async ({ request, cookies }) => {
         const data = await request.formData();
